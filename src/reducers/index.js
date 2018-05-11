@@ -93,6 +93,29 @@ export const initialData = (params, socketIO) => async (dispatch, getState) => {
         })
       })
       let data = await response.json();
+      if (data.status === 'ENOENT') {
+        payload.filename = '最初のファイル.txt';
+      } else
+      if (data && data.text) {
+        payload.text = data.text;
+      }
+    }
+    if (typeof payload.text === 'undefined') {
+      let response = await fetch('/scenario', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          action: 'load',
+          name: payload.name,
+          filename: payload.filename,
+        })
+      })
+      let data = await response.json();
+      if (data.status === 'ENOENT') {
+        payload.filename = '最初のファイル.txt';
+      } else
       if (data && data.text) {
         payload.text = data.text;
       }
