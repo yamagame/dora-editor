@@ -1,8 +1,14 @@
 import { combineReducers } from 'redux'
 import Play from './speech'
 import 'whatwg-fetch'
+import io from 'socket.io-client'
 
 //const Dora = require('dora');
+
+export const fontSize = (payload) => {
+  var size = (payload.width < payload.height) ? payload.width : payload.height;
+  return parseInt(size*0.6/10, 10);
+}
 
 const AsyncStorage = {
   getItem: function(key, defaultValue) {
@@ -24,7 +30,20 @@ export const types = {
 const algorithmPlay = new Play();
 //const dora = new Dora();
 
-const setValues = (state = {}, action) => {
+const initialState = {
+  name: '',
+  filename: '最初のファイル.txt',
+  clientId: '',
+  members: [],
+  loading: false,
+  saving: false,
+  fontSize: fontSize({
+    width: window.innerWidth,
+    height: window.innerHeight,
+  }),
+}
+
+const setValues = (state = initialState, action) => {
   if (action.type === types.PARAMS) {
     return {
       ...state,
@@ -44,28 +63,37 @@ export const reducers = combineReducers({
   app: setValues,
 })
 
-const initialState = {
-  name: '',
-  filename: '最初のファイル.txt',
-  clientId: '',
-  members: [],
-  loading: false,
-  saving: false,
-}
-
-export const initialData = (params, socketIO) => async (dispatch, getState) => {
+export const initialData = (params, callback) => async (dispatch, getState) => {
   const payload = {
     ...initialState,
     ...params,
     width: window.innerWidth,
     height: window.innerHeight,
   }
+  let signature = null;
+  let user_id = null;
   payload.fontSize = fontSize(payload);
-  socket = socketIO;
   await Promise.all(Object.keys(initialState).map(async (key) => {
     payload[key] = await AsyncStorage.getItem(key, payload[key]);
   }));
   try {
+    {
+      let response = await fetch('/access-token', {
+        method: 'POST',
+      });
+      if (response.ok) {
+        let data = await response.json();
+        signature = data.signature;
+        user_id = data.user_id;
+        dispatch({
+          type: types.PARAMS,
+          payload: {
+            user_id,
+            signature,
+          },
+        });
+      }
+    }
     if (payload.name) {
       {
         let response = await fetch('/scenario', {
@@ -128,26 +156,25 @@ export const initialData = (params, socketIO) => async (dispatch, getState) => {
       type: types.PARAMS,
       payload,
     });
-    if (socket) {
+    {
       const payload_ = {
         name: payload.name,
         clientId: payload.clientId,
         time: new Date(),
+        user_id,
+        signature,
       }
-      socket.emit('quiz', payload_);
+      callback(payload_);
     }
   } catch(err) {
     console.log(err);
   }
 }
 
-// function request(action, body, callback) {
-//   if (socket) {
-//     socket.emit(action, body, (data) => {
-//       if (callback) callback(null, data);
-//     });
-//   }
-// }
+export const createSocket = () => {
+  socket = io();
+  return socket;
+}
 
 export const playSpeech = (message, callback) => async (dispatch, getState) => {
   const node = {
@@ -178,46 +205,6 @@ export const stopSpeech = (callback) => async (dispatch, getState) => {
   });
 }
 
-// export const _playScenario = (message, range, callback) => async (dispatch, getState) => {
-//   try {
-//     const { name } = getState().app;
-//     await dora.parse(message, async function(filename, callback) {
-//       let response = await fetch('/scenario', {
-//         method: 'POST',
-//         headers: {
-//           'Content-Type': 'application/json'
-//         },
-//         body: JSON.stringify({
-//           action: 'load',
-//           name,
-//           filename,
-//         })
-//       })
-//       let data = await response.json();
-//       callback(data.text);
-//     });
-//     dora.play({
-//       payload: 'これはテストです',
-//     }, {
-//       socket,
-//       range,
-//     }, callback);
-//   } catch(err) {
-//     console.log(err);
-//     console.log(dora.errorInfo());
-//     err.info = dora.errorInfo();
-//     if (!err.info.reason) {
-//       err.info.reason = err.toString();
-//     }
-//     if (callback) callback(err, null);
-//   }
-// }
-
-// export const _stopScenario = (callback) => async (dispatch, getState) => {
-//   dora.stop(callback);
-//   socket.emit('stop-speech-to-text');
-// }
-
 export const playScenario = (filename, range, callback) => async (dispatch, getState) => {
   const { name } = getState().app;
   let response = await fetch('/command', {
@@ -233,7 +220,9 @@ export const playScenario = (filename, range, callback) => async (dispatch, getS
       range,
     })
   })
-  let data = await response.json();
+  if (response.ok) {
+    let data = await response.json();
+  }
   if (callback) callback(null);
 }
 
@@ -249,7 +238,9 @@ export const stopScenario = (callback) => async (dispatch, getState) => {
       action: 'stop',
     })
   })
-  let data = await response.json();
+  if (response.ok) {
+    let data = await response.json();
+  }
   if (callback) callback(null);
 }
 
@@ -309,7 +300,6 @@ export const create = (filename, callback) => async (dispatch, getState) => {
       if (callback) callback(data);
       return;
     } catch(err) {
-console.log(err);
     }
   }
   if (callback) callback({ status: 'Err', });
@@ -334,7 +324,6 @@ export const remove = (filename, callback) => async (dispatch, getState) => {
       if (callback) callback(data);
       return;
     } catch(err) {
-console.log(err);
     }
   }
   if (callback) callback({ status: 'Err', });
@@ -377,7 +366,6 @@ export const load = (callback) => async (dispatch, getState) => {
       if (callback) callback(data);
       return;
     } catch(err) {
-console.log(err);
     }
   }
   if (callback) callback({ status: 'Err', });
@@ -402,6 +390,11 @@ export const list = (callback) => async (dispatch, getState) => {
       let data = await response.json();
       if (data && data.items) {
         payload.items = data.items;
+        if (!payload.items.some( v => {
+          return (v === '最初のファイル.txt')
+        })) {
+          payload.items.push('最初のファイル.txt');
+        }
       }
       dispatch({
         type: types.PARAMS,
@@ -410,15 +403,9 @@ export const list = (callback) => async (dispatch, getState) => {
       if (callback) callback(data);
       return;
     } catch(err) {
-console.log(err);
     }
   }
   if (callback) callback({ status: 'Err', });
-}
-
-export const fontSize = (payload) => {
-  var size = (payload.width < payload.height) ? payload.width : payload.height;
-  return parseInt(size*0.6/10, 10);
 }
 
 export const changeLayout = (payload) => async (dispatch, getState) => {
@@ -443,11 +430,13 @@ export const setParams = (payload, callback) => async (dispatch, getState) => {
 }
 
 export const sendEntry = (callback) => async (dispatch, getState) => {
-  const { app: { name, clientId, } } = getState();
+  const { app: { name, clientId, user_id, signature, } } = getState();
   const payload = {
     name,
     clientId,
     time: new Date(),
+    user_id,
+    signature,
   }
   socket.emit('quiz', payload);
   dispatch({

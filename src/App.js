@@ -500,13 +500,12 @@ class App extends Component {
                     }
                   </StartButton>
                 </div>
+                <div>
+                  <form method="GET" action="/logout/editor">
+                    <input className="logoutButton" type="submit" value="logout" />
+                  </form>
+                </div>
               </div>
-              <p style={{
-                flex: 1,
-                fontSize: this.props.fontSize*0.4,
-              }}>
-                名前を選択してスタートボタンをクリックしてね！
-              </p>
             </div>
           </div>
         </Column>
