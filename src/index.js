@@ -56,6 +56,10 @@ store.dispatch(initialData(params, (payload) => {
     }
   });
 
+  socket.on('scenario_log', (payload) => {
+    console.log(`${payload.filename} : Line ${payload.lineNumber}\n${payload.message}`);
+  });
+
 }));
 
 ReactDOM.render(

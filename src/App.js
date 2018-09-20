@@ -29,8 +29,9 @@ import {
 } from 'react-bootstrap';
 
 import 'brace/mode/plain_text';
-import './libs/example_mode';
+import './libs/senario_editor_mode';
 import 'brace/theme/monokai';
+import 'brace/theme/chrome';
 
 function buttonValue(v, height, host) {
   if (typeof v !== 'object') {
@@ -46,7 +47,8 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      value: "",
+      value: '',
+      log_value: '',
       row: 0,
       width: window.innerWidth,
       height: window.innerHeight,
@@ -54,6 +56,7 @@ class App extends Component {
       selectedFilename: null,
       show_create_file: false,
       show_delete_file: false,
+      show_log_editor: false,
       new_filename: '',
     }
     this.saveTimeout = null;
@@ -107,6 +110,12 @@ class App extends Component {
         this.saveTimeout = null;
       });
     }, 1000);
+  }
+
+  onLogChange = (newValue) => {
+    this.setState({
+      log_value: newValue,
+    });
   }
 
   onCursorChange = (selection, event) => {
@@ -422,6 +431,11 @@ class App extends Component {
               show_selector: true,
             });
           }}/>
+          {/* <input type="button" value="ログ" onClick={() => {
+            this.setState({
+              show_log_editor: !(this.state.show_log_editor),
+            });
+          }}/> */}
           {
             (this.props.loading) ? <span style={{ color: 'blue', fontSize: 12, paddingLeft: 5, paddingRight: 5, }}> {`読み込み中... : ${this.props.filename}`} </span> : null
           }
@@ -434,20 +448,37 @@ class App extends Component {
             <input style={{ display: 'inline',}} type="button" value="名前の変更" onClick={this.rename}/>
           </div>
         </div>
-        <AceEditor
-          ref={ r => this.editor = r }
-          mode="example"
-          theme="monokai"
-          value={this.state.value}
-          width="100%" //{this.props.width}
-          height={(this.props.height-40)+"px"}
-          onChange={this.onChange}
-          showPrintMargin={false}
-          fontSize={18}
-          onCursorChange={this.onCursorChange}
-          name="UNIQUE_ID_OF_DIV"
-          editorProps={{$blockScrolling: Infinity}}
-        />
+        {
+          <AceEditor
+            ref={ r => this.editor = r }
+            style={{ display: 'inline-block', }}
+            mode="senario_editor"
+            theme="monokai"
+            value={this.state.value}
+            width={(this.state.show_log_editor)?"50%":"100%"}
+            height={(this.props.height-40)+"px"}
+            onChange={this.onChange}
+            showPrintMargin={false}
+            fontSize={18}
+            onCursorChange={this.onCursorChange}
+            name="senario_editor"
+            editorProps={{$blockScrolling: Infinity}}
+          />
+        }
+        {
+          (this.state.show_log_editor) ? <AceEditor
+            ref={ r => this.log_editor = r }
+            mode="text"
+            theme="chrome"
+            value={this.state.log_value}
+            width="50%"
+            height={(this.props.height-40)+"px"}
+            onChange={this.onLogChange}
+            fontSize={18}
+            name="log_editor"
+            style={{ display: 'inline-block', }}
+          /> : null
+        }
       </div>
     )
   }
