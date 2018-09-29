@@ -20,8 +20,6 @@ import './App.css';
 import ReactTable from "react-table";
 import 'react-table/react-table.css'
 import {
-  Grid,
-  Row,
   Col,
   Modal,
   Button,
@@ -304,11 +302,15 @@ class App extends Component {
           ]}
           defaultPageSize={100}
         />
-        <Modal show={this.state.show_create_file} bsSize="large" onHide={() => {
-          this.setState({
-            show_delete_file: false,
-          });
-        }}>
+        <Modal
+          show={this.state.show_create_file}
+          size="lg"
+          onHide={() => {
+            this.setState({
+              show_create_file: false,
+            });
+          }}
+        >
           <Modal.Header closeButton>
             <Modal.Title>
               新規ファイルの作成
@@ -364,11 +366,15 @@ class App extends Component {
             }}>作成</Button>
           </Modal.Footer>
         </Modal>
-        <Modal show={this.state.show_delete_file} bsSize="large" onHide={() => {
-          this.setState({
-            show_delete_file: false,
-          });
-        }}>
+        <Modal
+          show={this.state.show_delete_file}
+          size="lg"
+          onHide={() => {
+            this.setState({
+              show_delete_file: false,
+            });
+          }}
+        >
           <Modal.Header closeButton>
             <Modal.Title>
               ファイルの削除
