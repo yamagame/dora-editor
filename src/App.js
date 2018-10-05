@@ -36,7 +36,18 @@ function buttonValue(v, height, host) {
     return <p> { v } </p>;
   }
   if (v.image) {
-    return <div style={{ marginTop: 10, }} ><img alt="icon" style={{ margin: 'auto', padding: 0, pointerEvents: 'none', }} height={height-4} src={(host) ? host+v.image : v.image} /></div>
+    return <div style={{ marginTop: 10, }} >
+      <img
+        alt="icon"
+        style={{
+          margin: 'auto',
+          padding: 0,
+          pointerEvents: 'none',
+        }}
+        height={height-4}
+        src={(host) ? host+v.image : v.image}
+      />
+    </div>
   }
   return <p> { v.value } </p>;
 }
