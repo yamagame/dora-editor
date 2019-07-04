@@ -114,6 +114,16 @@
     },
     "/text-to-speech": {
       "target": "http://localhost:3090"
+    },
+    "/autostart": {
+      "target": "http://localhost:3090"
+    },
+    "/logout": {
+      "target": "http://localhost:3090"
+    },
+    "/login": {
+      "target": "http://localhost:3090"
     }
+    
   }
 }

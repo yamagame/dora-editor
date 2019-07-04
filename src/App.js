@@ -15,6 +15,8 @@ import {
   remove,
   changeLayout,
   setParams,
+  loadAutostart,
+  saveAutostart,
 } from './reducers'
 import './App.css';
 import ReactTable from "react-table";
@@ -89,6 +91,7 @@ class App extends Component {
   componentDidMount() {
     //this.props.onUpdate(this.box());
     window.addEventListener('resize', this.onResize, false);
+    this.props.loadAutostart();
   }
   
   componentWillUnmount() {
@@ -259,6 +262,21 @@ class App extends Component {
               show_selector: false,
             });
           }}/>
+          <input style={{ marginLeft: 10, }} type="button" value="自動起動" onClick={() => {
+            if (this.props.autostart && this.props.name === this.props.autostart.username &&  this.props.filename === this.props.autostart.filename) {
+              this.props.saveAutostart({
+              }, () => {
+                this.props.loadAutostart();
+              })
+            } else {
+              this.props.saveAutostart({
+                username: this.props.name,
+                filename: this.props.filename,
+              }, () => {
+                this.props.loadAutostart();
+              })
+            }
+          }}/>
           {
             (this.props.loading) ? <span style={{ color: 'blue', fontSize: 12, paddingLeft: 5, paddingRight: 5, }}> {`読み込み中... : ${this.props.filename}`} </span> : null
           }
@@ -285,6 +303,9 @@ class App extends Component {
             accessor: 'filename',
             Header: 'ファイル名',
             Cell: (props) => {
+              if (this.props.name === this.props.autostart.username && props.value === this.props.autostart.filename) {
+                return <div style={{color: 'red', fontWeight: 'bold'}}> { props.value } </div>
+              }
               return <div> { props.value } </div>
             },
           }]}
@@ -568,6 +589,14 @@ App.defaultProps = {
   fontSize: 16,
 }
 
+function makeItems(state) {
+  const t = (!state.app.items || state.app.items.length <= 0) ? ['最初のファイル.txt'] : state.app.items;
+  if (!t.some( v => v === '最初のファイル.txt')) {
+    t.push('最初のファイル.txt');
+  }
+  return t;
+}
+
 export default connect(
   state => ( {
     name: state.app.name,
@@ -576,10 +605,14 @@ export default connect(
     width: state.app.width,
     height: state.app.height,
     members: state.app.members,
-    items: (!state.app.items || state.app.items.length <= 0) ? ['最初のファイル.txt'] : state.app.items,
+    items: makeItems(state),
     filename: state.app.filename,
     loading: state.app.loading,
     saving: state.app.saving,
+    autostart: {
+      username: (state.app.autostart) ? state.app.autostart.username : null,
+      filename: (state.app.autostart) ? state.app.autostart.filename : null,
+    },
   } ),
   dispatch => ( {
     playSpeech: (text, callback) => dispatch( playSpeech(text, callback) ),
@@ -593,5 +626,7 @@ export default connect(
     list: (callback) => dispatch( list(callback) ),
     onLayout: (size) => dispatch( changeLayout(size) ),
     setParams: (payload, callback) => dispatch( setParams(payload, callback) ),
+    loadAutostart: (callback) => dispatch( loadAutostart(callback) ),
+    saveAutostart: (payload, callback) => dispatch( saveAutostart(payload, callback) ),
   })
 )(App);

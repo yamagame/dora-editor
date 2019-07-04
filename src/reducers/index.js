@@ -491,3 +491,36 @@ export const quizCommand = (payload, callback) => async (dispatch, getState) => 
   }
   if (callback) callback();
 }
+
+export const loadAutostart = (callback) => async (dispatch, getState) => {
+  let response = await fetch('/autostart', {
+    method: 'GET',
+  })
+  if (response.ok) {
+    try {
+      let data = await response.json();
+      console.log(data);
+      dispatch({
+        type: types.PARAMS,
+        payload: {
+          autostart: data,
+        },
+      });
+      if (callback) callback(data);
+      return;
+    } catch(err) {
+    }
+  }
+  if (callback) callback();
+}
+
+export const saveAutostart = (payload, callback) => async (dispatch, getState) => {
+  let response = await fetch('/autostart', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({autostart: payload})
+  })
+  if (callback) callback();
+}
