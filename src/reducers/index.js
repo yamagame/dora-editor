@@ -207,7 +207,7 @@ export const stopSpeech = (callback) => async (dispatch, getState) => {
 
 export const playScenario = (filename, range, callback) => async (dispatch, getState) => {
   const { name } = getState().app;
-  let response = await fetch('/command', {
+  await fetch('/command', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -220,15 +220,11 @@ export const playScenario = (filename, range, callback) => async (dispatch, getS
       range,
     })
   })
-  if (response.ok) {
-    let data = await response.json();
-  }
   if (callback) callback(null);
 }
 
 export const stopScenario = (callback) => async (dispatch, getState) => {
-  const { name, filename } = getState().app;
-  let response = await fetch('/command', {
+  await fetch('/command', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -238,9 +234,6 @@ export const stopScenario = (callback) => async (dispatch, getState) => {
       action: 'stop',
     })
   })
-  if (response.ok) {
-    let data = await response.json();
-  }
   if (callback) callback(null);
 }
 
@@ -374,7 +367,7 @@ export const load = (callback) => async (dispatch, getState) => {
 export const list = (callback) => async (dispatch, getState) => {
   const payload = {
   }
-  const { name, filename } = getState().app;
+  const { name } = getState().app;
   let response = await fetch('/scenario', {
     method: 'POST',
     headers: {
@@ -515,7 +508,7 @@ export const loadAutostart = (callback) => async (dispatch, getState) => {
 }
 
 export const saveAutostart = (payload, callback) => async (dispatch, getState) => {
-  let response = await fetch('/autostart', {
+  await fetch('/autostart', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
