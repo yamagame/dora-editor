@@ -124,5 +124,8 @@
     "/login": {
       "target": "http://localhost:3090"
     }
+  },
+  "devDependencies": {
+    "cssnano": "^4.1.10"
   }
 }

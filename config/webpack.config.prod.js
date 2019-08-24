@@ -181,9 +181,23 @@ module.exports = {
                       loader: require.resolve('css-loader'),
                       options: {
                         importLoaders: 1,
-                        minimize: true,
                         sourceMap: shouldUseSourceMap,
                       },
+                    },
+                    {
+                      loader: require.resolve('postcss-loader'),
+                      options: {
+                        sourceMap: true,
+                        plugins: [
+                            require('cssnano')({
+                                preset: 'default',
+                            }),
+                            require('autoprefixer')({
+                                grid: true,
+                                browsers: ['IE 11', 'last 2 versions']
+                            })
+                        ]
+                      }
                     },
                     {
                       loader: require.resolve('postcss-loader'),
