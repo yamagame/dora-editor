@@ -22,11 +22,11 @@ import './App.css';
 import ReactTable from "react-table";
 import 'react-table/react-table.css'
 import {
-  Col,
   Modal,
   Button,
-  ControlLabel,
 } from 'react-bootstrap';
+import FileView from './components/FileView';
+import parsePath from 'parse-filepath';
 
 import 'brace/mode/plain_text';
 import './libs/senario_editor_mode';
@@ -160,7 +160,7 @@ class App extends Component {
   }
 
   playRange = () => {
-    if (this.state.startRow == this.state.endRow) {
+    if (this.state.startRow === this.state.endRow) {
       this.play({ start: this.state.startRow });
     } else {
       this.play({ start: this.state.startRow, end: this.state.startRow+Math.max(1, this.state.endRow-this.state.startRow) });
@@ -187,7 +187,7 @@ class App extends Component {
   }
 
   _playRange = () => {
-    if (this.state.startRow == this.state.endRow) {
+    if (this.state.startRow === this.state.endRow) {
       this.play(this.state.value.trim().split('\n').slice(this.state.startRow));
     } else {
       this.play(this.state.value.trim().split('\n').slice(this.state.startRow, this.state.startRow+Math.max(1, this.state.endRow-this.state.startRow)));
@@ -288,52 +288,68 @@ class App extends Component {
             <input style={{ display: 'inline', }} disabled type="button" value="名前の変更" onClick={this.rename}/>
           </div>
         </div>
-        <ReactTable
-          style={{
-            fontSize: 12,
-            width: (this.props.width-2),
-            height: (this.props.height-40)+"px",
-          }}
-          data={this.props.items.map( v => {
-            return {
-              filename: v,
-            }
-          })}
-          columns={[{
-            accessor: 'filename',
-            Header: 'ファイル名',
-            Cell: (props) => {
-              if (this.props.name === this.props.autostart.username && props.value === this.props.autostart.filename) {
-                return <div style={{color: 'red', fontWeight: 'bold'}}> { props.value } </div>
+        <div>
+          <FileView
+            styles={{
+              position: 'absolute',
+              left: (this.props.width-2-300),
+              width: 300,
+              height: this.props.height-40,
+            }}
+            subDirectory={`/${parsePath(this.state.filename || this.props.filename).name}`}
+          />
+          <ReactTable
+            style={{
+              margin: 0,
+              fontSize: 12,
+              position: 'absolute',
+              top: 22,
+              left: 10,
+              width: (this.props.width-2-300-10),
+              height: (this.props.height-40)+"px",
+            }}
+            data={this.props.items.map( v => {
+              return {
+                filename: v,
               }
-              return <div> { props.value } </div>
-            },
-          }]}
-          getTrProps={(state, rowInfo) => {
-            return {
-              onClick: () => {
-                this.props.setParams({ filename: rowInfo.original.filename }, () => {
-                  this.props.load((err) => {
-                    if (err.status !== 'OK') {
-                      window.alert('ファイルの読み込みに失敗しました');
-                    }
-                  });
-                })
+            })}
+            columns={[{
+              accessor: 'filename',
+              Header: 'ファイル名',
+              Cell: (props) => {
+                if (this.props.name === this.props.autostart.username && props.value === this.props.autostart.filename) {
+                  return <div style={{color: 'red', fontWeight: 'bold'}}> { props.value } </div>
+                }
+                return <div> { props.value } </div>
               },
-              style: {
-                backgroundColor: `${(rowInfo && rowInfo.original.filename === this.props.filename) ? 'lightgreen' : 'inherit'}`,
-              },
-            }
-          }}
-          className="-striped -highlight"
-          defaultSorted={[
-            {
-              id: "filename",
-              desc: false,
-            }
-          ]}
-          defaultPageSize={100}
-        />
+            }]}
+            getTrProps={(state, rowInfo) => {
+              return {
+                onClick: () => {
+                  this.props.setParams({ filename: rowInfo.original.filename }, () => {
+                    this.props.load((err) => {
+                      if (err.status !== 'OK') {
+                        window.alert('ファイルの読み込みに失敗しました');
+                      }
+                    });
+                  })
+                },
+                style: {
+                  backgroundColor: `${(rowInfo && rowInfo.original.filename === this.props.filename) ? 'lightgreen' : 'inherit'}`,
+                },
+              }
+            }}
+            className="-striped -highlight"
+            defaultSorted={[
+              {
+                id: "filename",
+                desc: false,
+              }
+            ]}
+            defaultPageSize={100}
+          />
+        </div>
+
         <Modal
           show={this.state.show_create_file}
           size="lg"
@@ -486,6 +502,16 @@ class App extends Component {
             <input style={{ display: 'inline',}} type="button" value="名前の変更" onClick={this.rename}/>
           </div>
         </div>
+        <FileView
+          styles={{
+            position: 'absolute',
+            left: (this.props.width-2-300),
+            width: 300,
+            height: this.props.height-40,
+          }}
+          subDirectory={`${parsePath(this.state.filename || this.props.filename).name}`}
+          deleteButton={false}
+        />
         {
           <AceEditor
             ref={ r => this.editor = r }
@@ -493,7 +519,7 @@ class App extends Component {
             mode="senario_editor"
             theme="monokai"
             value={this.state.value}
-            width={(this.state.show_log_editor)?"50%":"100%"}
+            width={(this.props.width-300)+"px"}
             height={(this.props.height-40)+"px"}
             onChange={this.onChange}
             showPrintMargin={false}

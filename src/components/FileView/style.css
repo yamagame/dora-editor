@@ -1,0 +1,63 @@
+.fileview.box {
+  display: flex;
+  flex-direction: column;
+  outline: 2px dashed #92b0b3;
+  outline-offset: -10px;
+  padding: 20px;
+}
+
+.fileview .filename {
+  color: gray;
+  font-size: 16px;
+  margin: 0;
+  padding: 0;
+  padding-left: 10;
+  user-select: none;
+}
+
+.fileview .upload-message-box {
+  font-size: 13px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.fileview .filelist-row {
+  table-layout: fixed;
+  margin-top: 10px;
+  overflow: auto;
+  width: 100%;
+}
+
+.fileview .filelist-col {
+  overflow: hidden;
+}
+
+.fileview .thumb {
+  display: block;
+  max-width:220px;
+  max-height:230px;
+  margin-left: auto;
+  margin-right: auto;
+  width: auto;
+  height: auto;
+}
+
+.fileview .thumb-box {
+  display: table;
+  min-height: 230px;
+  outline: 1px solid #92b0b3;
+}
+
+.fileview .thumb-inner {
+  display: table-cell;
+  vertical-align: middle;
+}
+
+.fileview .upload-label:hover {
+  color: #fd7e14;
+}
+
+.fileview .selectedImage {
+  color: #fd7e14;
+}
