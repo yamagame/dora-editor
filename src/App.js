@@ -296,7 +296,7 @@ class App extends Component {
               width: 300,
               height: this.props.height-40,
             }}
-            subDirectory={`/${parsePath(this.state.filename || this.props.filename).name}`}
+            subDirectory={`${parsePath(this.state.filename || this.props.filename).name}`}
           />
           <ReactTable
             style={{
