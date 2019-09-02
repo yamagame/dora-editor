@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import axios from 'axios';
-import { ProgressBar } from 'react-bootstrap';
+import { ProgressBar, Modal, Button } from 'react-bootstrap';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import './style.css';
@@ -16,6 +16,8 @@ class FileView extends Component {
       selectedImageFile: props.selectedImageFile,
       loaded: 0,
       dragAndDrop: false,
+      slideCommand: null,
+      showSlideCommand: false,
     }
   }
 
@@ -166,17 +168,16 @@ class FileView extends Component {
 
   onClickImage = (file) => {
     const cmd = `/slide/images/${this.props.subDirectory}/${file}`;
-    navigator.permissions.query({name: "clipboard-write"}).then(result => {
-      if (result.state === "granted" || result.state === "prompt") {
-        navigator.clipboard.writeText(cmd).then(function() {
-          toast.success(`copy ${cmd}`)
-        }, function() {
-        });
-      }
-    });
+    this.setState({
+      slideCommand: cmd,
+      showSlideCommand: true,
+    })
   }
 
   render() {
+    const handleClose = () => {
+      this.setState({ showSlideCommand: false });
+    }
     return (
       <div
         className="fileview box"
@@ -255,13 +256,24 @@ class FileView extends Component {
                       (this.state.selectedImageFile === v && this.props.deleteButton) ? <span style={{ float: 'right', fontSize: 13, marginTop: 3, color: 'red', paddingRight: 10,}} onClick={ this.fileClickDeleteHandler(v) }>削除</span> : null
                     }
                     {
-                      (this.state.selectedImageFile === v && !this.props.deleteButton) ? <span style={{ float: 'right', fontSize: 13, marginTop: 3, color: '#007bff', paddingRight: 10,}} onClick={ () => this.onClickImage(v) }>COPY</span> : null
+                      (this.state.selectedImageFile === v && !this.props.deleteButton) ? <span style={{ float: 'right', fontSize: 13, marginTop: 3, color: '#007bff', paddingRight: 10,}} onClick={ () => this.onClickImage(v) }>CMD</span> : null
                     }
                   </div>
               } ) : null
             }
           </code>
         </div>
+        <Modal show={this.state.showSlideCommand} onHide={handleClose} >
+          <Modal.Header closeButton>
+            <Modal.Title>画像表示コマンド</Modal.Title>
+          </Modal.Header>
+          <Modal.Body><textarea style={{ width: '100%' }}>{ this.state.slideCommand }</textarea></Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={handleClose}>
+              Close
+            </Button>
+          </Modal.Footer>
+        </Modal>
       </div>
     );
   }
