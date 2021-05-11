@@ -22,6 +22,5 @@ yarn-error.log*
 *.backup
 
 package-lock.json
-yarn.lock
 
 .vscode
