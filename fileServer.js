@@ -5,7 +5,7 @@ const fs = require("fs");
 
 const upload = function (req, res, basePath, dirPath, filenameCallback) {
   const destPath = path.join(basePath, dirPath);
-  if (path.normalize(destPath).indexOf(path.normalize(basePath)) != 0) {
+  if (path.normalize(destPath).indexOf(path.normalize(basePath)) !== 0) {
     return res.status(403).send("invalid dirname.");
   }
   mkdirp(destPath, (err) => {
@@ -74,7 +74,7 @@ const readDir = function (req, res, basePath, dirPath) {
 
 const deleteFile = function (req, res, basePath, dirPath, filename) {
   const destPath = path.join(basePath, dirPath);
-  if (path.normalize(destPath).indexOf(path.normalize(basePath)) != 0) {
+  if (path.normalize(destPath).indexOf(path.normalize(basePath)) !== 0) {
     return res.status(403).send("invalid dirname.");
   }
   mkdirp(destPath, (err) => {
@@ -82,7 +82,7 @@ const deleteFile = function (req, res, basePath, dirPath, filename) {
       return res.status(500).json(err);
     }
     const filePath = path.join(destPath, filename);
-    if (path.normalize(filePath).indexOf(path.normalize(destPath)) != 0) {
+    if (path.normalize(filePath).indexOf(path.normalize(destPath)) !== 0) {
       return res.status(403).send("invalid filename.");
     }
     fs.unlink(filePath, (err) => {
@@ -94,8 +94,39 @@ const deleteFile = function (req, res, basePath, dirPath, filename) {
   });
 };
 
+function readdirFileOnly(dirname, callback) {
+  fs.readdir(dirname, (err, items) => {
+    if (err) {
+      callback(err, []);
+      return;
+    }
+    const r = [];
+    const check = () => {
+      if (items.length <= 0) {
+        callback(null, r);
+        return;
+      }
+      const t = items.shift();
+      fs.stat(path.join(dirname, t), (err, stat) => {
+        if (err) {
+          callback(err, []);
+          return;
+        }
+        if (stat.isFile()) {
+          if (t.indexOf(".") !== 0) {
+            r.push(t);
+          }
+        }
+        check();
+      });
+    };
+    check();
+  });
+}
+
 module.exports = {
   upload,
   readDir,
   deleteFile,
+  readdirFileOnly,
 };

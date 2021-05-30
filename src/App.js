@@ -17,6 +17,8 @@ import {
   setParams,
   loadAutostart,
   saveAutostart,
+  login,
+  clearText,
 } from "./reducers";
 import "./App.css";
 import ReactTable from "react-table";
@@ -91,6 +93,7 @@ class App extends Component {
     //this.props.onUpdate(this.box());
     window.addEventListener("resize", this.onResize, false);
     this.props.loadAutostart();
+    this.props.load();
   }
 
   componentWillUnmount() {
@@ -100,9 +103,11 @@ class App extends Component {
 
   componentWillReceiveProps(nextProps) {
     if (nextProps.text !== this.props.text) {
-      this.setState({
-        value: nextProps.text,
-      });
+      if (typeof nextProps.text !== "undefined") {
+        this.setState({
+          value: nextProps.text,
+        });
+      }
     }
   }
 
@@ -227,22 +232,29 @@ class App extends Component {
 
   startQuiz = () => {
     if (this.entryName.value.trim() !== "") {
-      this.props.setParams(
-        { name: this.entryName.value.trim(), filename: "最初のファイル.txt" },
-        () => {
-          this.setState(
-            {
-              changeName: false,
-            },
-            () => {
-              this.props.list(() => {
-                this.props.load();
-              });
-            }
-          );
-        }
-      );
+      const username = this.entryName.value.trim();
+      this.props.login(username, () => {
+        this.props.setParams(
+          { name: username, filename: "最初のファイル.txt" },
+          () => {
+            this.setState(
+              {
+                changeName: false,
+              },
+              () => {
+                this.props.list(() => {
+                  this.props.load();
+                });
+              }
+            );
+          }
+        );
+      });
     }
+  };
+
+  logout = () => {
+    this.props.logout();
   };
 
   render() {
@@ -254,7 +266,7 @@ class App extends Component {
     ) {
       return this.renderTitle({});
     }
-    if (this.state.show_selector) {
+    if (this.state.show_selector || this.props.items.length <= 0) {
       return this.renderSelector();
     }
     return this.renderEditor();
@@ -393,6 +405,7 @@ class App extends Component {
               width: 300,
               height: this.props.height - 40,
             }}
+            username={this.props.name}
             subDirectory={`${
               parsePath(this.state.filename || this.props.filename).name
             }`}
@@ -645,9 +658,14 @@ class App extends Component {
             type="button"
             value="一覧"
             onClick={() => {
-              this.setState({
-                show_selector: true,
-              });
+              this.setState(
+                {
+                  show_selector: true,
+                },
+                () => {
+                  this.props.clearText(() => {});
+                }
+              );
             }}
           />
           {/* <input type="button" value="ログ" onClick={() => {
@@ -702,6 +720,7 @@ class App extends Component {
             width: 300,
             height: this.props.height - 40,
           }}
+          username={this.props.name}
           subDirectory={`${
             parsePath(this.state.filename || this.props.filename).name
           }`}
@@ -811,7 +830,7 @@ class App extends Component {
                   </StartButton>
                 </div>
                 <div>
-                  <form method="GET" action="/logout/editor">
+                  <form method="POST" action="/logout">
                     <input
                       className="logoutButton"
                       type="submit"
@@ -834,17 +853,6 @@ App.defaultProps = {
   fontSize: 16,
 };
 
-function makeItems(state) {
-  const t =
-    !state.app.items || state.app.items.length <= 0
-      ? ["最初のファイル.txt"]
-      : state.app.items;
-  if (!t.some((v) => v === "最初のファイル.txt")) {
-    t.push("最初のファイル.txt");
-  }
-  return t;
-}
-
 export default connect(
   (state) => ({
     name: state.app.name,
@@ -853,7 +861,7 @@ export default connect(
     width: state.app.width,
     height: state.app.height,
     members: state.app.members,
-    items: makeItems(state),
+    items: state.app.items,
     filename: state.app.filename,
     loading: state.app.loading,
     saving: state.app.saving,
@@ -878,5 +886,7 @@ export default connect(
     loadAutostart: (callback) => dispatch(loadAutostart(callback)),
     saveAutostart: (payload, callback) =>
       dispatch(saveAutostart(payload, callback)),
+    login: (username, callback) => dispatch(login(username, callback)),
+    clearText: () => dispatch(clearText()),
   })
 )(App);

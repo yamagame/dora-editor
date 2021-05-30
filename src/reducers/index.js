@@ -23,6 +23,7 @@ const AsyncStorage = {
 var socket = null;
 
 export const types = {
+  DELETE: "DELETE",
   PARAMS: "PARAMS",
   LAYOUT: "LAYOUT",
 };
@@ -32,7 +33,7 @@ const algorithmPlay = new Play();
 
 const initialState = {
   name: "",
-  filename: "最初のファイル.txt",
+  filename: "",
   clientId: "",
   members: [],
   loading: false,
@@ -44,6 +45,13 @@ const initialState = {
 };
 
 const setValues = (state = initialState, action) => {
+  if (action.type === types.DELETE) {
+    const r = { ...state };
+    Object.keys(action.payload).forEach((key) => {
+      delete r[key];
+    });
+    return r;
+  }
   if (action.type === types.PARAMS) {
     return {
       ...state,
@@ -80,7 +88,7 @@ export const initialData = (params, callback) => async (dispatch, getState) => {
   );
   try {
     {
-      let response = await fetch("/access-token", {
+      const response = await fetch("/access-token", {
         method: "POST",
       });
       if (response.ok) {
@@ -98,7 +106,7 @@ export const initialData = (params, callback) => async (dispatch, getState) => {
     }
     if (payload.name) {
       {
-        let response = await fetch("/scenario", {
+        const response = await fetch("/scenario", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -114,7 +122,7 @@ export const initialData = (params, callback) => async (dispatch, getState) => {
         }
       }
       {
-        let response = await fetch("/scenario", {
+        const response = await fetch("/scenario", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -127,13 +135,17 @@ export const initialData = (params, callback) => async (dispatch, getState) => {
         });
         let data = await response.json();
         if (data.status === "ENOENT") {
-          payload.filename = "最初のファイル.txt";
+          if (payload.items.length > 0) {
+            payload.filename = payload.items[0];
+          } else {
+            payload.filename = "empty.txt";
+          }
         } else if (data && data.text) {
           payload.text = data.text;
         }
       }
       if (typeof payload.text === "undefined") {
-        let response = await fetch("/scenario", {
+        const response = await fetch("/scenario", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -146,7 +158,11 @@ export const initialData = (params, callback) => async (dispatch, getState) => {
         });
         let data = await response.json();
         if (data.status === "ENOENT") {
-          payload.filename = "最初のファイル.txt";
+          if (payload.items.length > 0) {
+            payload.filename = payload.items[0];
+          } else {
+            payload.filename = "empty.txt";
+          }
         } else if (data && data.text) {
           payload.text = data.text;
         }
@@ -168,6 +184,7 @@ export const initialData = (params, callback) => async (dispatch, getState) => {
     }
   } catch (err) {
     console.log(err);
+    console.log(payload);
   }
 };
 
@@ -246,7 +263,7 @@ export const save = (message, callback) => async (dispatch, getState) => {
       saving: true,
     },
   });
-  let response = await fetch("/scenario", {
+  const response = await fetch("/scenario", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -276,7 +293,7 @@ export const save = (message, callback) => async (dispatch, getState) => {
 
 export const create = (filename, callback) => async (dispatch, getState) => {
   const { name } = getState().app;
-  let response = await fetch("/scenario", {
+  const response = await fetch("/scenario", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -299,7 +316,7 @@ export const create = (filename, callback) => async (dispatch, getState) => {
 
 export const remove = (filename, callback) => async (dispatch, getState) => {
   const { name } = getState().app;
-  let response = await fetch("/scenario", {
+  const response = await fetch("/scenario", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -320,6 +337,15 @@ export const remove = (filename, callback) => async (dispatch, getState) => {
   if (callback) callback({ status: "Err" });
 };
 
+export const clearText = () => async (dispatch, getState) => {
+  dispatch({
+    type: types.DELETE,
+    payload: {
+      text: true,
+    },
+  });
+};
+
 export const load = (callback) => async (dispatch, getState) => {
   const payload = {};
   const { name, filename } = getState().app;
@@ -329,7 +355,7 @@ export const load = (callback) => async (dispatch, getState) => {
       loading: true,
     },
   });
-  let response = await fetch("/scenario", {
+  const response = await fetch("/scenario", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -363,7 +389,7 @@ export const load = (callback) => async (dispatch, getState) => {
 export const list = (callback) => async (dispatch, getState) => {
   const payload = {};
   const { name } = getState().app;
-  let response = await fetch("/scenario", {
+  const response = await fetch("/scenario", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -378,13 +404,6 @@ export const list = (callback) => async (dispatch, getState) => {
       let data = await response.json();
       if (data && data.items) {
         payload.items = data.items;
-        if (
-          !payload.items.some((v) => {
-            return v === "最初のファイル.txt";
-          })
-        ) {
-          payload.items.push("最初のファイル.txt");
-        }
       }
       dispatch({
         type: types.PARAMS,
@@ -392,7 +411,9 @@ export const list = (callback) => async (dispatch, getState) => {
       });
       if (callback) callback(data);
       return;
-    } catch (err) {}
+    } catch (err) {
+      if (callback) callback({ items: [] });
+    }
   }
   if (callback) callback({ status: "Err" });
 };
@@ -490,7 +511,7 @@ export const quizCommand =
   };
 
 export const loadAutostart = (callback) => async (dispatch, getState) => {
-  let response = await fetch("/autostart", {
+  const response = await fetch("/autostart", {
     method: "GET",
   });
   if (response.ok) {
@@ -521,3 +542,33 @@ export const saveAutostart =
     });
     if (callback) callback();
   };
+
+export const login = (username, callback) => async (dispatch, getState) => {
+  const response = await fetch("/login", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ username }),
+  });
+  const result = () => {
+    if (response.ok) {
+      if (response.status === 200) return true;
+    }
+    return false;
+  };
+  if (callback) callback(result());
+};
+
+export const logout = (callback) => async (dispatch, getState) => {
+  const response = await fetch("/logout", {
+    method: "POST",
+  });
+  const result = () => {
+    if (response.ok) {
+      if (response.status === 200) return true;
+    }
+    return false;
+  };
+  if (callback) callback(result());
+};

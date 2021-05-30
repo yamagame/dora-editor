@@ -25,7 +25,6 @@ store.dispatch(
     socket.emit("quiz", payload);
 
     socket.on("connect", () => {
-      console.log("connected");
       store.dispatch(sendEntry());
     });
 

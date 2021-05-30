@@ -1,9 +1,9 @@
-import React, { Component } from 'react';
-import axios from 'axios';
-import { ProgressBar, Modal, Button } from 'react-bootstrap';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import './style.css';
+import React, { Component } from "react";
+import axios from "axios";
+import { ProgressBar, Modal, Button } from "react-bootstrap";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import "./style.css";
 
 const TOAST_ERR_TIME = 5000;
 
@@ -18,7 +18,7 @@ class FileView extends Component {
       dragAndDrop: false,
       slideCommand: null,
       showSlideCommand: false,
-    }
+    };
   }
 
   componentDidMount() {
@@ -27,7 +27,7 @@ class FileView extends Component {
 
   componentWillReceiveProps(nextProps) {
     if (this.props.subDirectory !== nextProps.subDirectory) {
-      this.setState({ subDirectory: nextProps.subDirectory}, () => {
+      this.setState({ subDirectory: nextProps.subDirectory }, () => {
         this.readDir(true);
       });
     }
@@ -37,26 +37,29 @@ class FileView extends Component {
     let err = [];
     let retval = true;
     const types = this.props.fileTypes;
-    [ ...files].forEach( (file, x) => {
-      if (types.every(type => files[x].type !== type)) {
-        err[x] = files[x].type + ' is not a supported format\n';
+    [...files].forEach((file, x) => {
+      if (types.every((type) => files[x].type !== type)) {
+        err[x] = files[x].type + " is not a supported format\n";
       }
-    })
+    });
     for (var z = 0; z < err.length; z++) {
-      toast.error(err[z], {  autoClose: TOAST_ERR_TIME, })
+      toast.error(err[z], { autoClose: TOAST_ERR_TIME });
       retval = false;
     }
     return retval;
-  }
+  };
 
   maxSelectFile = (files) => {
-    if (this.props.limitFileNumber !== 0 && files.length > this.props.limitFileNumber) {
-      const msg = `Only ${this.props.limitFileNumber} images can be uploaded at a time`
-      toast.warn(msg, {  autoClose: TOAST_ERR_TIME, })
+    if (
+      this.props.limitFileNumber !== 0 &&
+      files.length > this.props.limitFileNumber
+    ) {
+      const msg = `Only ${this.props.limitFileNumber} images can be uploaded at a time`;
+      toast.warn(msg, { autoClose: TOAST_ERR_TIME });
       return false;
     }
     return true;
-  }
+  };
 
   checkFileSize = (files) => {
     let size = this.props.fileSizeLimit;
@@ -65,79 +68,95 @@ class FileView extends Component {
     if (size > 0) {
       for (var x = 0; x < files.length; x++) {
         if (files[x].size > size) {
-          err[x] = files[x].type + 'is too large, please pick a smaller file\n';
+          err[x] = files[x].type + "is too large, please pick a smaller file\n";
         }
-      };
+      }
     }
     for (var z = 0; z < err.length; z++) {
-      toast.error(err[z], {  autoClose: TOAST_ERR_TIME, })
+      toast.error(err[z], { autoClose: TOAST_ERR_TIME });
       retval = false;
     }
     return retval;
-  }
+  };
 
   onChangeFileHandler = (files, cb) => {
-    if (this.maxSelectFile(files) && this.checkMimeType(files) && this.checkFileSize(files)) {
-      this.setState({
-        selectedFile: files,
-        loaded: 0
-      }, cb)
+    if (
+      this.maxSelectFile(files) &&
+      this.checkMimeType(files) &&
+      this.checkFileSize(files)
+    ) {
+      this.setState(
+        {
+          selectedFile: files,
+          loaded: 0,
+        },
+        cb
+      );
     } else {
       return false;
     }
     return true;
-  }
+  };
 
-  onChangeHandler = event => {
+  onChangeHandler = (event) => {
     const { files } = event.target;
     const target = event.target;
-    this.setState({
-      dragAndDrop: false,
-    }, () => {
-      if (!this.onChangeFileHandler(files)) {
-        target.value = null;
+    this.setState(
+      {
+        dragAndDrop: false,
+      },
+      () => {
+        if (!this.onChangeFileHandler(files)) {
+          target.value = null;
+        }
       }
-    });
-  }
+    );
+  };
 
   onClickHandler = () => {
     if (this.state.selectedFile) {
-      const data = new FormData()
+      const data = new FormData();
       for (var x = 0; x < this.state.selectedFile.length; x++) {
-        data.append('file', this.state.selectedFile[x])
+        data.append("file", this.state.selectedFile[x]);
       }
-      axios.post(`${this.props.uploadURL}/${this.props.subDirectory}`, data, {
-        onUploadProgress: ProgressEvent => {
-          this.setState({
-            loaded: (ProgressEvent.loaded / ProgressEvent.total * 100),
-          })
-        },
-      })
-        .then(res => {
-          toast.success('upload success')
+      axios
+        .post(`${this.props.uploadURL}/${this.props.subDirectory}`, data, {
+          onUploadProgress: (ProgressEvent) => {
+            this.setState({
+              loaded: (ProgressEvent.loaded / ProgressEvent.total) * 100,
+            });
+          },
+        })
+        .then((res) => {
+          toast.success("upload success");
           this.readDir();
         })
-        .catch(err => {
+        .catch((err) => {
           console.log(err);
-          toast.error('upload fail', {  autoClose: TOAST_ERR_TIME, })
-        })
+          toast.error("upload fail", { autoClose: TOAST_ERR_TIME });
+        });
     }
-  }
+  };
 
   readDir = (reload) => {
-    axios.post(`${this.props.readDirURL}/${this.props.subDirectory}`)
-      .then(res => {
+    axios
+      .post(`${this.props.readDirURL}/${this.props.subDirectory}`)
+      .then((res) => {
         this.setState({
-          dirFiles: res.data,
-          selectedImageFile: (reload) ? (res.data.length > 0 ? res.data[0] : null) : this.state.selectedImageFile,
+          dirFiles: typeof res.data === "object" ? res.data : [],
+          selectedImageFile: reload
+            ? res.data.length > 0
+              ? res.data[0]
+              : null
+            : this.state.selectedImageFile,
           selectedFile: null,
-        })
+        });
       })
-      .catch(err => {
+      .catch((err) => {
         console.log(err);
-        toast.error('readdir fail', {  autoClose: TOAST_ERR_TIME, })
-      })
-  }
+        toast.error("read file list fail", { autoClose: TOAST_ERR_TIME });
+      });
+  };
 
   fileClickHandler = (file) => {
     return () => {
@@ -150,34 +169,35 @@ class FileView extends Component {
           selectedImageFile: file,
         });
       }
-    }
-  }
+    };
+  };
 
   fileClickDeleteHandler = (file) => {
     return () => {
-      axios.post(`${this.props.deleteURL}/${this.props.subDirectory}/${file}`)
-        .then(res => {
+      axios
+        .post(`${this.props.deleteURL}/${this.props.subDirectory}/${file}`)
+        .then((res) => {
           this.readDir();
         })
-        .catch(err => {
+        .catch((err) => {
           console.log(err);
-          toast.error('delete fail', {  autoClose: TOAST_ERR_TIME, })
-        })
-    }
-  }
+          toast.error("delete fail", { autoClose: TOAST_ERR_TIME });
+        });
+    };
+  };
 
   onClickImage = (file) => {
-    const cmd = `/slide/images/${this.props.subDirectory}/${file}`;
+    const cmd = `/slide/data/${this.props.username}/${this.props.subDirectory}/${file}`;
     this.setState({
       slideCommand: cmd,
       showSlideCommand: true,
-    })
-  }
+    });
+  };
 
   render() {
     const handleClose = () => {
       this.setState({ showSlideCommand: false });
-    }
+    };
     return (
       <div
         className="fileview box"
@@ -187,87 +207,140 @@ class FileView extends Component {
         onDragOver={(e) => {
           e.preventDefault();
         }}
-        onDragLeave={(e) => {
-        }}
+        onDragLeave={(e) => {}}
         onDrop={(e) => {
           const { files } = e.dataTransfer;
-          this.setState({
-            dragAndDrop: true,
-          }, () => {
-            if (!this.onChangeFileHandler(files, () => {
-              this.onClickHandler();
-            })) {
-              this.setState({
-                selectedFile: null,
-                loaded: 0
-              })
+          this.setState(
+            {
+              dragAndDrop: true,
+            },
+            () => {
+              if (
+                !this.onChangeFileHandler(files, () => {
+                  this.onClickHandler();
+                })
+              ) {
+                this.setState({
+                  selectedFile: null,
+                  loaded: 0,
+                });
+              }
             }
-          });
+          );
           e.preventDefault();
         }}
       >
-        <input type="file" id="file" style={{ display: "none", }} multiple onChange={this.onChangeHandler} />
+        <input
+          type="file"
+          id="file"
+          style={{ display: "none" }}
+          multiple
+          onChange={this.onChangeHandler}
+        />
         <div className="upload-message-box">
-          <label style={{
-            display: 'inline-block',
-          }} htmlFor="file">
+          <label
+            style={{
+              display: "inline-block",
+            }}
+            htmlFor="file"
+          >
             <strong className="upload-label">Upload Image File </strong>
           </label>
-          <span
-            style={{ display: 'inline', }} 
-          >{ " or drop files here" }</span>
+          <span style={{ display: "inline" }}>{" or drop files here"}</span>
           <ProgressBar max={100} color="success" value={this.state.loaded} />
           <ToastContainer autoClose={3000} />
-          {
-            (this.state.selectedFile && this.state.selectedFile.length > 0 && !this.state.dragAndDrop) ? <button type="button" className="btn btn-success btn-block" onClick={this.onClickHandler}>Upload</button> : null
-          }
+          {this.state.selectedFile &&
+          this.state.selectedFile.length > 0 &&
+          !this.state.dragAndDrop ? (
+            <button
+              type="button"
+              className="btn btn-success btn-block"
+              onClick={this.onClickHandler}
+            >
+              Upload
+            </button>
+          ) : null}
         </div>
-        <div
-        className="thumb-box"
-        >
-          <div
-            className="thumb-inner"
-          >
-            {
-              this.state.selectedImageFile ? (
-                <a href={`${this.props.pictureURL}/${this.props.subDirectory}/${this.state.selectedImageFile}`} target="image-detail-window">
-                  <img className="thumb" alt="selected" src={`${this.props.pictureURL}/${this.props.subDirectory}/${this.state.selectedImageFile}`} />
-                </a>
-              ) : null
-            }
+        <div className="thumb-box">
+          <div className="thumb-inner">
+            {this.state.selectedImageFile ? (
+              <a
+                href={`${this.props.pictureURL}/${this.props.username}/${this.props.subDirectory}/${this.state.selectedImageFile}`}
+                target="image-detail-window"
+              >
+                <img
+                  className="thumb"
+                  alt="selected"
+                  src={`${this.props.pictureURL}/${this.props.username}/${this.props.subDirectory}/${this.state.selectedImageFile}`}
+                />
+              </a>
+            ) : null}
           </div>
         </div>
-        <div
-          className="filelist-row"
-        >
-          <code
-            className="filelist-col"
-          >
-            {
-              this.state.dirFiles ? this.state.dirFiles.map( (v, i) => {
-                return <div
-                    key={i}
-                    className={`filename ${this.state.selectedImageFile === v ? 'selectedImage' : ''}`}
-                  >
-                    <div style={{ display: 'inline-block', width: '80%', }} onClick={ this.fileClickHandler(v) }>
-                      <strong onClick={ this.fileClickHandler(v) }>{v}</strong>
+        <div className="filelist-row">
+          <code className="filelist-col">
+            {this.state.dirFiles
+              ? this.state.dirFiles.map((v, i) => {
+                  return (
+                    <div
+                      key={i}
+                      className={`filename ${
+                        this.state.selectedImageFile === v
+                          ? "selectedImage"
+                          : ""
+                      }`}
+                    >
+                      <div
+                        style={{ display: "inline-block", width: "80%" }}
+                        onClick={this.fileClickHandler(v)}
+                      >
+                        <strong onClick={this.fileClickHandler(v)}>{v}</strong>
+                      </div>
+                      {this.state.selectedImageFile === v &&
+                      this.props.deleteButton ? (
+                        <span
+                          style={{
+                            float: "right",
+                            fontSize: 13,
+                            marginTop: 3,
+                            color: "red",
+                            paddingRight: 10,
+                          }}
+                          onClick={this.fileClickDeleteHandler(v)}
+                        >
+                          削除
+                        </span>
+                      ) : null}
+                      {this.state.selectedImageFile === v &&
+                      !this.props.deleteButton ? (
+                        <span
+                          style={{
+                            float: "right",
+                            fontSize: 13,
+                            marginTop: 3,
+                            color: "#007bff",
+                            paddingRight: 10,
+                          }}
+                          onClick={() => this.onClickImage(v)}
+                        >
+                          CMD
+                        </span>
+                      ) : null}
                     </div>
-                    {
-                      (this.state.selectedImageFile === v && this.props.deleteButton) ? <span style={{ float: 'right', fontSize: 13, marginTop: 3, color: 'red', paddingRight: 10,}} onClick={ this.fileClickDeleteHandler(v) }>削除</span> : null
-                    }
-                    {
-                      (this.state.selectedImageFile === v && !this.props.deleteButton) ? <span style={{ float: 'right', fontSize: 13, marginTop: 3, color: '#007bff', paddingRight: 10,}} onClick={ () => this.onClickImage(v) }>CMD</span> : null
-                    }
-                  </div>
-              } ) : null
-            }
+                  );
+                })
+              : null}
           </code>
         </div>
-        <Modal show={this.state.showSlideCommand} onHide={handleClose} >
+        <Modal show={this.state.showSlideCommand} onHide={handleClose}>
           <Modal.Header closeButton>
             <Modal.Title>画像表示コマンド</Modal.Title>
           </Modal.Header>
-          <Modal.Body><textarea style={{ width: '100%' }}>{ this.state.slideCommand }</textarea></Modal.Body>
+          <Modal.Body>
+            <textarea style={{ width: "100%" }}>
+              {this.state.slideCommand}
+            </textarea>
+          </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={handleClose}>
               Close
@@ -280,17 +353,18 @@ class FileView extends Component {
 }
 
 FileView.defaultProps = {
-  fileTypes: ['image/png', 'image/jpeg', 'image/gif'],
-  uploadURL: '/file/upload/pictures',
-  readDirURL: '/file/readDir/pictures',
-  pictureURL: '/images',
-  deleteURL: '/file/delete/pictures',
+  fileTypes: ["image/png", "image/jpeg", "image/gif"],
+  uploadURL: "/file/upload/pictures",
+  readDirURL: "/file/list/pictures",
+  pictureURL: "/data",
+  username: "dora-engine",
+  deleteURL: "/file/delete/pictures",
   fileSizeLimit: 0,
   limitFileNumber: 0,
-  subDirectory: '',
+  subDirectory: "",
   selectedImageFile: null,
   styles: {},
   deleteButton: true,
-}
+};
 
 export default FileView;
