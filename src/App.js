@@ -18,6 +18,7 @@ import {
   loadAutostart,
   saveAutostart,
   login,
+  editText,
   clearText,
 } from "./reducers";
 import "./App.css";
@@ -25,7 +26,7 @@ import ReactTable from "react-table";
 import "react-table/react-table.css";
 import { Modal, Button } from "react-bootstrap";
 import FileView from "./components/FileView";
-import parsePath from "parse-filepath";
+import path from "path-browserify";
 
 import "brace/mode/plain_text";
 import "./libs/senario_editor_mode";
@@ -59,7 +60,6 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      value: "",
       log_value: "",
       row: 0,
       width: window.innerWidth,
@@ -96,30 +96,28 @@ class App extends Component {
     this.props.load();
   }
 
+  // static getDerivedStateFromProps(props, state) {
+  //   if (
+  //     state.selectedFilename !== props.filename &&
+  //     state.value !== props.text
+  //   ) {
+  //     return { ...state, value: props.text, selectedFilename: props.filename };
+  //   }
+  //   return { ...state };
+  // }
+
   componentWillUnmount() {
     //this.props.onUpdate(null);
     window.removeEventListener("resize", this.onResize);
   }
 
-  componentWillReceiveProps(nextProps) {
-    if (nextProps.text !== this.props.text) {
-      if (typeof nextProps.text !== "undefined") {
-        this.setState({
-          value: nextProps.text,
-        });
-      }
-    }
-  }
-
-  onChange = (newValue) => {
-    this.setState({
-      value: newValue,
-    });
+  onChange = newValue => {
+    this.props.editText(newValue);
     if (this.saveTimeout) {
       clearTimeout(this.saveTimeout);
     }
     this.saveTimeout = setTimeout(() => {
-      this.props.save(this.state.value, (err) => {
+      this.props.save(newValue, err => {
         if (err.status !== "OK") {
           window.alert("ファイルの保存に失敗しました");
         }
@@ -128,7 +126,7 @@ class App extends Component {
     }, 1000);
   };
 
-  onLogChange = (newValue) => {
+  onLogChange = newValue => {
     this.setState({
       log_value: newValue,
     });
@@ -146,7 +144,7 @@ class App extends Component {
 
   debug = () => {};
 
-  play = (range) => {
+  play = range => {
     // this.props.playScenario(this.state.value, range, (err, msg) => {
     //   if (err) {
     //     window.alert(`${err.info.lineNumber}行目でエラーが発生しました。\n\n${err.info.code}\n\n${err.info.reason}`);
@@ -180,7 +178,7 @@ class App extends Component {
     this.props.setParams({ playing: false });
   };
 
-  _play = (scenario) => {
+  _play = scenario => {
     const s = scenario
       .map((v, i) => {
         if (v === "" && i > 0) {
@@ -195,15 +193,15 @@ class App extends Component {
   };
 
   _playAll = () => {
-    this.play(this.state.value.split("\n"));
+    this.play(this.props.text.split("\n"));
   };
 
   _playRange = () => {
     if (this.state.startRow === this.state.endRow) {
-      this.play(this.state.value.trim().split("\n").slice(this.state.startRow));
+      this.play(this.props.text.trim().split("\n").slice(this.state.startRow));
     } else {
       this.play(
-        this.state.value
+        this.props.text
           .trim()
           .split("\n")
           .slice(
@@ -305,7 +303,7 @@ class App extends Component {
           <select
             style={{ marginLeft: 10, height: 23 }}
             value={this.props.filename}
-            onChange={(event) => {
+            onChange={event => {
               this.props.setParams({ filename: event.target.value }, () => {
                 this.props.load();
               });
@@ -406,9 +404,10 @@ class App extends Component {
               height: this.props.height - 40,
             }}
             username={this.props.name}
-            subDirectory={`${
-              parsePath(this.state.filename || this.props.filename).name
-            }`}
+            subDirectory={path
+              .basename(this.state.filename || this.props.filename)
+              .split(".")
+              .shift()}
           />
           <ReactTable
             style={{
@@ -420,7 +419,7 @@ class App extends Component {
               width: this.props.width - 2 - 300 - 10,
               height: this.props.height - 40 + "px",
             }}
-            data={this.props.items.map((v) => {
+            data={this.props.items.map(v => {
               return {
                 filename: v,
               };
@@ -429,7 +428,7 @@ class App extends Component {
               {
                 accessor: "filename",
                 Header: "ファイル名",
-                Cell: (props) => {
+                Cell: props => {
                   if (
                     this.props.name === this.props.autostart.username &&
                     props.value === this.props.autostart.filename
@@ -451,7 +450,7 @@ class App extends Component {
                   this.props.setParams(
                     { filename: rowInfo.original.filename },
                     () => {
-                      this.props.load((err) => {
+                      this.props.load(err => {
                         if (err.status !== "OK") {
                           window.alert("ファイルの読み込みに失敗しました");
                         }
@@ -497,7 +496,7 @@ class App extends Component {
               type="text"
               style={{ width: "100%" }}
               value={this.state.new_filename}
-              onChange={(e) => {
+              onChange={e => {
                 this.setState({
                   new_filename: e.target.value,
                 });
@@ -521,7 +520,7 @@ class App extends Component {
                     show_create_file: false,
                   },
                   () => {
-                    this.props.create(this.state.new_filename, (res) => {
+                    this.props.create(this.state.new_filename, res => {
                       if (
                         res.status !== "OK" ||
                         typeof res.filename === "undefined"
@@ -530,12 +529,12 @@ class App extends Component {
                         return;
                       }
                       this.props.setParams({ filename: res.filename }, () => {
-                        this.props.list((res) => {
+                        this.props.list(res => {
                           if (res.status !== "OK") {
                             window.alert("リストの読み込みに失敗しました");
                             return;
                           }
-                          this.props.load((res) => {
+                          this.props.load(res => {
                             if (res.status !== "OK") {
                               window.alert("ファイルの読み込みに失敗しました");
                               return;
@@ -594,12 +593,12 @@ class App extends Component {
                     show_delete_file: false,
                   },
                   () => {
-                    this.props.remove(this.props.filename, (res) => {
+                    this.props.remove(this.props.filename, res => {
                       if (res.status !== "OK") {
                         window.alert("ファイルの削除に失敗しました");
                         return;
                       }
-                      this.props.list((res) => {
+                      this.props.list(res => {
                         if (res.status !== "OK") {
                           window.alert("リストの読み込みに失敗しました");
                           return;
@@ -637,7 +636,7 @@ class App extends Component {
           <select
             style={{ marginLeft: 10, height: 23 }}
             value={this.props.filename}
-            onChange={(event) => {
+            onChange={event => {
               this.props.setParams({ filename: event.target.value }, () => {
                 this.props.load();
               });
@@ -663,7 +662,7 @@ class App extends Component {
                   show_selector: true,
                 },
                 () => {
-                  this.props.clearText(() => {});
+                  // this.props.clearText();
                 }
               );
             }}
@@ -721,18 +720,19 @@ class App extends Component {
             height: this.props.height - 40,
           }}
           username={this.props.name}
-          subDirectory={`${
-            parsePath(this.state.filename || this.props.filename).name
-          }`}
+          subDirectory={path
+            .basename(this.state.filename || this.props.filename)
+            .split(".")
+            .shift()}
           deleteButton={false}
         />
         {
           <AceEditor
-            ref={(r) => (this.editor = r)}
+            ref={r => (this.editor = r)}
             style={{ display: "inline-block" }}
             mode="senario_editor"
             theme="monokai"
-            value={this.state.value}
+            value={this.props.text}
             width={this.props.width - 300 + "px"}
             height={this.props.height - 40 + "px"}
             onChange={this.onChange}
@@ -745,7 +745,7 @@ class App extends Component {
         }
         {this.state.show_log_editor ? (
           <AceEditor
-            ref={(r) => (this.log_editor = r)}
+            ref={r => (this.log_editor = r)}
             mode="text"
             theme="chrome"
             value={this.state.log_value}
@@ -789,7 +789,7 @@ class App extends Component {
               >
                 <label> あなたの名前： </label>
                 <input
-                  ref={(d) => (this.entryName = d)}
+                  ref={d => (this.entryName = d)}
                   type="text"
                   className="Name-Input"
                 />
@@ -805,14 +805,14 @@ class App extends Component {
                   width: "25%",
                   height: 32,
                 }}
-                onChange={(event) => {
+                onChange={event => {
                   if (event.target.value !== "-") {
                     this.entryName.value = event.target.value;
                   }
                 }}
               >
                 {this.props.members
-                  ? this.props.members.map((p) => {
+                  ? this.props.members.map(p => {
                       return <option value={p}> {p} </option>;
                     })
                   : null}
@@ -854,7 +854,7 @@ App.defaultProps = {
 };
 
 export default connect(
-  (state) => ({
+  state => ({
     name: state.app.name,
     text: state.app.text,
     fontSize: state.app.fontSize,
@@ -870,23 +870,24 @@ export default connect(
       filename: state.app.autostart ? state.app.autostart.filename : null,
     },
   }),
-  (dispatch) => ({
+  dispatch => ({
     playSpeech: (text, callback) => dispatch(playSpeech(text, callback)),
     stopSpeech: (text, callback) => dispatch(stopSpeech(text, callback)),
     playScenario: (text, range, callback) =>
       dispatch(playScenario(text, range, callback)),
-    stopScenario: (callback) => dispatch(stopScenario(callback)),
+    stopScenario: callback => dispatch(stopScenario(callback)),
     save: (text, callback) => dispatch(save(text, callback)),
     create: (filename, callback) => dispatch(create(filename, callback)),
     remove: (filename, callback) => dispatch(remove(filename, callback)),
-    load: (callback) => dispatch(load(callback)),
-    list: (callback) => dispatch(list(callback)),
-    onLayout: (size) => dispatch(changeLayout(size)),
+    load: callback => dispatch(load(callback)),
+    list: callback => dispatch(list(callback)),
+    onLayout: size => dispatch(changeLayout(size)),
     setParams: (payload, callback) => dispatch(setParams(payload, callback)),
-    loadAutostart: (callback) => dispatch(loadAutostart(callback)),
+    loadAutostart: callback => dispatch(loadAutostart(callback)),
     saveAutostart: (payload, callback) =>
       dispatch(saveAutostart(payload, callback)),
     login: (username, callback) => dispatch(login(username, callback)),
+    editText: text => dispatch(editText(text)),
     clearText: () => dispatch(clearText()),
   })
 )(App);

@@ -19,7 +19,7 @@ import registerServiceWorker from "./registerServiceWorker";
 const params = {};
 let store = createStore(reducers, applyMiddleware(thunk));
 store.dispatch(
-  initialData(params, (payload) => {
+  initialData(params, payload => {
     const socket = createSocket();
 
     socket.emit("quiz", payload);
@@ -28,8 +28,7 @@ store.dispatch(
       store.dispatch(sendEntry());
     });
 
-    socket.on("quiz", (msg) => {
-      console.log(msg);
+    socket.on("quiz", msg => {
       if (msg.action === "entry") {
         delete msg.action;
       }
@@ -43,7 +42,7 @@ store.dispatch(
       store.dispatch(quizCommand(msg));
     });
 
-    socket.on("scenario_status", (payload) => {
+    socket.on("scenario_status", payload => {
       const {
         app: { playing },
       } = store.getState();
@@ -59,7 +58,7 @@ store.dispatch(
       }
     });
 
-    socket.on("scenario_log", (payload) => {
+    socket.on("scenario_log", payload => {
       console.log(
         `${payload.filename} : Line ${payload.lineNumber}\n${payload.message}`
       );

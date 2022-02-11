@@ -25,7 +25,7 @@ class FileView extends Component {
     this.readDir(true);
   }
 
-  componentWillReceiveProps(nextProps) {
+  componentDidUpdate(nextProps) {
     if (this.props.subDirectory !== nextProps.subDirectory) {
       this.setState({ subDirectory: nextProps.subDirectory }, () => {
         this.readDir(true);
@@ -33,12 +33,12 @@ class FileView extends Component {
     }
   }
 
-  checkMimeType = (files) => {
+  checkMimeType = files => {
     let err = [];
     let retval = true;
     const types = this.props.fileTypes;
     [...files].forEach((file, x) => {
-      if (types.every((type) => files[x].type !== type)) {
+      if (types.every(type => files[x].type !== type)) {
         err[x] = files[x].type + " is not a supported format\n";
       }
     });
@@ -49,7 +49,7 @@ class FileView extends Component {
     return retval;
   };
 
-  maxSelectFile = (files) => {
+  maxSelectFile = files => {
     if (
       this.props.limitFileNumber !== 0 &&
       files.length > this.props.limitFileNumber
@@ -61,7 +61,7 @@ class FileView extends Component {
     return true;
   };
 
-  checkFileSize = (files) => {
+  checkFileSize = files => {
     let size = this.props.fileSizeLimit;
     let err = [];
     let retval = true;
@@ -98,7 +98,7 @@ class FileView extends Component {
     return true;
   };
 
-  onChangeHandler = (event) => {
+  onChangeHandler = event => {
     const { files } = event.target;
     const target = event.target;
     this.setState(
@@ -121,27 +121,27 @@ class FileView extends Component {
       }
       axios
         .post(`${this.props.uploadURL}/${this.props.subDirectory}`, data, {
-          onUploadProgress: (ProgressEvent) => {
+          onUploadProgress: ProgressEvent => {
             this.setState({
               loaded: (ProgressEvent.loaded / ProgressEvent.total) * 100,
             });
           },
         })
-        .then((res) => {
+        .then(res => {
           toast.success("upload success");
           this.readDir();
         })
-        .catch((err) => {
+        .catch(err => {
           console.log(err);
           toast.error("upload fail", { autoClose: TOAST_ERR_TIME });
         });
     }
   };
 
-  readDir = (reload) => {
+  readDir = reload => {
     axios
       .post(`${this.props.readDirURL}/${this.props.subDirectory}`)
-      .then((res) => {
+      .then(res => {
         this.setState({
           dirFiles: typeof res.data === "object" ? res.data : [],
           selectedImageFile: reload
@@ -152,13 +152,13 @@ class FileView extends Component {
           selectedFile: null,
         });
       })
-      .catch((err) => {
+      .catch(err => {
         console.log(err);
         toast.error("read file list fail", { autoClose: TOAST_ERR_TIME });
       });
   };
 
-  fileClickHandler = (file) => {
+  fileClickHandler = file => {
     return () => {
       if (this.state.selectedImageFile === file) {
         this.setState({
@@ -172,22 +172,26 @@ class FileView extends Component {
     };
   };
 
-  fileClickDeleteHandler = (file) => {
+  fileClickDeleteHandler = file => {
     return () => {
       axios
         .post(`${this.props.deleteURL}/${this.props.subDirectory}/${file}`)
-        .then((res) => {
+        .then(res => {
           this.readDir();
         })
-        .catch((err) => {
+        .catch(err => {
           console.log(err);
           toast.error("delete fail", { autoClose: TOAST_ERR_TIME });
         });
     };
   };
 
-  onClickImage = (file) => {
-    const cmd = `/slide/data/${this.props.username}/${this.props.subDirectory}/${file}`;
+  onClickImage = file => {
+    const cmd =
+      `/slide/${this.props.pictureURL}/${this.props.subDirectory}/${file}`.replace(
+        /\/\//g,
+        "/"
+      );
     this.setState({
       slideCommand: cmd,
       showSlideCommand: true,
@@ -204,11 +208,11 @@ class FileView extends Component {
         style={{
           ...this.props.styles,
         }}
-        onDragOver={(e) => {
+        onDragOver={e => {
           e.preventDefault();
         }}
-        onDragLeave={(e) => {}}
-        onDrop={(e) => {
+        onDragLeave={e => {}}
+        onDrop={e => {
           const { files } = e.dataTransfer;
           this.setState(
             {
@@ -265,13 +269,13 @@ class FileView extends Component {
           <div className="thumb-inner">
             {this.state.selectedImageFile ? (
               <a
-                href={`${this.props.pictureURL}/${this.props.username}/${this.props.subDirectory}/${this.state.selectedImageFile}`}
+                href={`${this.props.pictureURL}/${this.props.subDirectory}/${this.state.selectedImageFile}`}
                 target="image-detail-window"
               >
                 <img
                   className="thumb"
                   alt="selected"
-                  src={`${this.props.pictureURL}/${this.props.username}/${this.props.subDirectory}/${this.state.selectedImageFile}`}
+                  src={`${this.props.pictureURL}/${this.props.subDirectory}/${this.state.selectedImageFile}`}
                 />
               </a>
             ) : null}
@@ -356,7 +360,7 @@ FileView.defaultProps = {
   fileTypes: ["image/png", "image/jpeg", "image/gif"],
   uploadURL: "/file/upload/pictures",
   readDirURL: "/file/list/pictures",
-  pictureURL: "/data",
+  pictureURL: "/images",
   username: "dora-engine",
   deleteURL: "/file/delete/pictures",
   fileSizeLimit: 0,
