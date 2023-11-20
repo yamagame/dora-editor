@@ -202,7 +202,7 @@ export const createSocket = () => {
 
 export const playSpeech = (message, callback) => async (dispatch, getState) => {
   const node = {
-    log: () => {},
+    log: () => { },
   };
   const msg = {
     robotHost: socket,
@@ -222,7 +222,7 @@ export const playSpeech = (message, callback) => async (dispatch, getState) => {
 
 export const stopSpeech = callback => async (dispatch, getState) => {
   const node = {
-    log: () => {},
+    log: () => { },
   };
   algorithmPlay.stop(node, socket, function (err, res) {
     if (callback) callback(err, res);
@@ -293,7 +293,7 @@ export const save = (message, callback) => async (dispatch, getState) => {
       let data = await response.json();
       if (callback) callback(data);
       return;
-    } catch (err) {}
+    } catch (err) { }
   }
   if (callback) callback({ status: "Err" });
 };
@@ -316,7 +316,7 @@ export const create = (filename, callback) => async (dispatch, getState) => {
       let data = await response.json();
       if (callback) callback(data);
       return;
-    } catch (err) {}
+    } catch (err) { }
   }
   if (callback) callback({ status: "Err" });
 };
@@ -339,7 +339,7 @@ export const remove = (filename, callback) => async (dispatch, getState) => {
       let data = await response.json();
       if (callback) callback(data);
       return;
-    } catch (err) {}
+    } catch (err) { }
   }
   if (callback) callback({ status: "Err" });
 };
@@ -397,7 +397,7 @@ export const load = callback => async (dispatch, getState) => {
       });
       if (callback) callback(data);
       return;
-    } catch (err) {}
+    } catch (err) { }
   }
   if (callback) callback({ status: "Err" });
 };
@@ -541,7 +541,7 @@ export const loadAutostart = callback => async (dispatch, getState) => {
       });
       if (callback) callback(data);
       return;
-    } catch (err) {}
+    } catch (err) { }
   }
   if (callback) callback();
 };

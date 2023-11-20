@@ -142,7 +142,7 @@ class App extends Component {
     });
   };
 
-  debug = () => {};
+  debug = () => { };
 
   play = range => {
     // this.props.playScenario(this.state.value, range, (err, msg) => {
@@ -207,7 +207,7 @@ class App extends Component {
           .slice(
             this.state.startRow,
             this.state.startRow +
-              Math.max(1, this.state.endRow - this.state.startRow)
+            Math.max(1, this.state.endRow - this.state.startRow)
           )
       );
     }
@@ -311,13 +311,13 @@ class App extends Component {
           >
             {this.props.items
               ? this.props.items.map((p, i) => {
-                  return (
-                    <option key={i} value={p}>
-                      {" "}
-                      {p}{" "}
-                    </option>
-                  );
-                })
+                return (
+                  <option key={i} value={p}>
+                    {" "}
+                    {p}{" "}
+                  </option>
+                );
+              })
               : null}
           </select>
           <input
@@ -459,11 +459,10 @@ class App extends Component {
                   );
                 },
                 style: {
-                  backgroundColor: `${
-                    rowInfo && rowInfo.original.filename === this.props.filename
-                      ? "lightgreen"
-                      : "inherit"
-                  }`,
+                  backgroundColor: `${rowInfo && rowInfo.original.filename === this.props.filename
+                    ? "lightgreen"
+                    : "inherit"
+                    }`,
                 },
               };
             }}
@@ -644,13 +643,13 @@ class App extends Component {
           >
             {this.props.items
               ? this.props.items.map((p, i) => {
-                  return (
-                    <option key={i} value={p}>
-                      {" "}
-                      {p}{" "}
-                    </option>
-                  );
-                })
+                return (
+                  <option key={i} value={p}>
+                    {" "}
+                    {p}{" "}
+                  </option>
+                );
+              })
               : null}
           </select>
           <input
@@ -787,41 +786,20 @@ class App extends Component {
                   marginBottom: 0,
                 }}
               >
-                <label> あなたの名前： </label>
+                <label> アカウント名： </label>
                 <input
                   ref={d => (this.entryName = d)}
                   type="text"
+                  style={{ padding: 10, }}
                   className="Name-Input"
                 />
               </div>
-              <select
-                name="members"
-                style={{
-                  appearance: "none",
-                  marginLeft: 100,
-                  marginBottom: 30,
-                  border: "1px solid #999",
-                  //background: '#eee',
-                  width: "25%",
-                  height: 32,
-                }}
-                onChange={event => {
-                  if (event.target.value !== "-") {
-                    this.entryName.value = event.target.value;
-                  }
-                }}
-              >
-                {this.props.members
-                  ? this.props.members.map(p => {
-                      return <option value={p}> {p} </option>;
-                    })
-                  : null}
-              </select>
               <div
                 style={{
                   flex: 1,
                   width: "30%",
                   margin: "auto",
+                  marginTop: 30,
                 }}
               >
                 <div>
@@ -829,20 +807,11 @@ class App extends Component {
                     {buttonValue("スタート", this.props.fontSize * 4)}
                   </StartButton>
                 </div>
-                <div>
-                  <form method="POST" action="/logout">
-                    <input
-                      className="logoutButton"
-                      type="submit"
-                      value="logout"
-                    />
-                  </form>
-                </div>
               </div>
             </div>
           </div>
-        </Column>
-      </div>
+        </Column >
+      </div >
     );
   }
 }
