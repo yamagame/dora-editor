@@ -202,6 +202,15 @@ class FileView extends Component {
     const handleClose = () => {
       this.setState({ showSlideCommand: false });
     };
+    const handleInsert = () => {
+      if (this.props.onEdit) {
+        this.props.onEdit(this.state.slideCommand)
+        this.setState({ showSlideCommand: false });
+      }
+    };
+    const handleChange = (e) => {
+      this.setState({ slideCommand: e.target.value })
+    }
     return (
       <div
         className="fileview box"
@@ -211,7 +220,7 @@ class FileView extends Component {
         onDragOver={e => {
           e.preventDefault();
         }}
-        onDragLeave={e => {}}
+        onDragLeave={e => { }}
         onDrop={e => {
           const { files } = e.dataTransfer;
           this.setState(
@@ -254,8 +263,8 @@ class FileView extends Component {
           <ProgressBar max={100} color="success" value={this.state.loaded} />
           <ToastContainer autoClose={3000} />
           {this.state.selectedFile &&
-          this.state.selectedFile.length > 0 &&
-          !this.state.dragAndDrop ? (
+            this.state.selectedFile.length > 0 &&
+            !this.state.dragAndDrop ? (
             <button
               type="button"
               className="btn btn-success btn-block"
@@ -285,54 +294,53 @@ class FileView extends Component {
           <code className="filelist-col">
             {this.state.dirFiles
               ? this.state.dirFiles.map((v, i) => {
-                  return (
-                    <div
-                      key={i}
-                      className={`filename ${
-                        this.state.selectedImageFile === v
-                          ? "selectedImage"
-                          : ""
+                return (
+                  <div
+                    key={i}
+                    className={`filename ${this.state.selectedImageFile === v
+                      ? "selectedImage"
+                      : ""
                       }`}
+                  >
+                    <div
+                      style={{ display: "inline-block", width: "80%" }}
+                      onClick={this.fileClickHandler(v)}
                     >
-                      <div
-                        style={{ display: "inline-block", width: "80%" }}
-                        onClick={this.fileClickHandler(v)}
-                      >
-                        <strong onClick={this.fileClickHandler(v)}>{v}</strong>
-                      </div>
-                      {this.state.selectedImageFile === v &&
-                      this.props.deleteButton ? (
-                        <span
-                          style={{
-                            float: "right",
-                            fontSize: 13,
-                            marginTop: 3,
-                            color: "red",
-                            paddingRight: 10,
-                          }}
-                          onClick={this.fileClickDeleteHandler(v)}
-                        >
-                          削除
-                        </span>
-                      ) : null}
-                      {this.state.selectedImageFile === v &&
-                      !this.props.deleteButton ? (
-                        <span
-                          style={{
-                            float: "right",
-                            fontSize: 13,
-                            marginTop: 3,
-                            color: "#007bff",
-                            paddingRight: 10,
-                          }}
-                          onClick={() => this.onClickImage(v)}
-                        >
-                          CMD
-                        </span>
-                      ) : null}
+                      <strong onClick={this.fileClickHandler(v)}>{v}</strong>
                     </div>
-                  );
-                })
+                    {this.state.selectedImageFile === v &&
+                      this.props.deleteButton ? (
+                      <span
+                        style={{
+                          float: "right",
+                          fontSize: 13,
+                          marginTop: 3,
+                          color: "red",
+                          paddingRight: 10,
+                        }}
+                        onClick={this.fileClickDeleteHandler(v)}
+                      >
+                        削除
+                      </span>
+                    ) : null}
+                    {this.state.selectedImageFile === v &&
+                      !this.props.deleteButton ? (
+                      <span
+                        style={{
+                          float: "right",
+                          fontSize: 13,
+                          marginTop: 3,
+                          color: "#007bff",
+                          paddingRight: 10,
+                        }}
+                        onClick={() => this.onClickImage(v)}
+                      >
+                        CMD
+                      </span>
+                    ) : null}
+                  </div>
+                );
+              })
               : null}
           </code>
         </div>
@@ -341,13 +349,16 @@ class FileView extends Component {
             <Modal.Title>画像表示コマンド</Modal.Title>
           </Modal.Header>
           <Modal.Body>
-            <textarea style={{ width: "100%" }}>
-              {this.state.slideCommand}
-            </textarea>
+            <textarea style={{ width: "100%" }} value={this.state.slideCommand} onChange={handleChange} />
           </Modal.Body>
           <Modal.Footer>
+            {this.props.onEdit ?
+              <Button variant="secondary" onClick={handleInsert}>
+                挿入
+              </Button> : null
+            }
             <Button variant="secondary" onClick={handleClose}>
-              Close
+              閉じる
             </Button>
           </Modal.Footer>
         </Modal>
@@ -369,6 +380,7 @@ FileView.defaultProps = {
   selectedImageFile: null,
   styles: {},
   deleteButton: true,
+  onEdit: null,
 };
 
 export default FileView;

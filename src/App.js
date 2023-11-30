@@ -139,6 +139,7 @@ class App extends Component {
       startRow: srow,
       endRow: erow,
       row: selection.getSelectionLead().row,
+      range: selection.getRange(),
     });
   };
 
@@ -724,6 +725,17 @@ class App extends Component {
             .split(".")
             .shift()}
           deleteButton={false}
+          onEdit={(cmd) => {
+            let lines = this.props.text.split("\n")
+            let row = this.state.startRow
+            lines.splice(row, 0, cmd)
+            this.onChange(lines.join("\n"))
+            this.editor.editor.moveCursorTo(row + 1, 0);
+            this.setState({
+              startRow: row + 1,
+              endRow: row + 1,
+            });
+          }}
         />
         {
           <AceEditor
