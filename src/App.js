@@ -93,7 +93,6 @@ class App extends Component {
     //this.props.onUpdate(this.box());
     window.addEventListener("resize", this.onResize, false);
     this.props.loadAutostart();
-    this.props.load();
   }
 
   // static getDerivedStateFromProps(props, state) {
@@ -232,9 +231,10 @@ class App extends Component {
   startQuiz = () => {
     if (this.entryName.value.trim() !== "") {
       const username = this.entryName.value.trim();
+      const initialfile = "シナリオ.dora"
       this.props.login(username, () => {
         this.props.setParams(
-          { name: username, filename: "最初のファイル.txt" },
+          { name: username, filename: initialfile },
           () => {
             this.setState(
               {
@@ -265,7 +265,7 @@ class App extends Component {
     ) {
       return this.renderTitle({});
     }
-    if (this.state.show_selector || this.props.items.length <= 0) {
+    if (this.state.show_selector || !this.props.items?.length > 0) {
       return this.renderSelector();
     }
     return this.renderEditor();
@@ -389,7 +389,7 @@ class App extends Component {
             </p>
             <input
               style={{ display: "inline" }}
-              disabled
+              disabled={this.props.items?.length > 0}
               type="button"
               value="名前の変更"
               onClick={this.rename}
@@ -420,11 +420,11 @@ class App extends Component {
               width: this.props.width - 2 - 300 - 10,
               height: this.props.height - 40 + "px",
             }}
-            data={this.props.items.map(v => {
+            data={this.props.items ? this.props.items.map(v => {
               return {
                 filename: v,
               };
-            })}
+            }) : []}
             columns={[
               {
                 accessor: "filename",
